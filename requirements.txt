@@ -3,10 +3,4 @@ torch
 torchvision
 pillow
 numpy
-
 pytorch-lightning
-git lfs install
-
-
-
-
