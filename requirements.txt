@@ -4,5 +4,6 @@ torchvision
 pillow
 numpy
 
+install pytorch-lightning
 
 
