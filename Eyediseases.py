@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_ckpt_path = "models/mobilenetv3_large_100_checkpoint_fold0.pt"
+mobilenetv3_ckpt_path = "C:\Users\USER\OneDrive\microplastic-website\web-Classification\mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Device ---
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -107,5 +107,6 @@ if uploaded_image is not None:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
+
 
 
