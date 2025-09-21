@@ -4,6 +4,7 @@ from torchvision import models, transforms
 from PIL import Image
 import numpy as np
 import os
+import pytorch_lightning as pl
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -12,27 +13,39 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+mobilenetv3_ckpt_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Device ---
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-# --- Load MobileNetV3 state_dict ---
+# --- Load Lightning checkpoint ---
 @st.cache_resource
-def load_model(model_path):
-    if not os.path.exists(model_path):
-        st.error(f"ไม่พบไฟล์โมเดล: '{model_path}'")
+def load_model(ckpt_path):
+    if not os.path.exists(ckpt_path):
+        st.error(f"ไม่พบไฟล์โมเดล: '{ckpt_path}'")
         st.stop()
-
     try:
-        # สร้างโครงสร้าง MobileNetV3
-        model = models.mobilenet_v3_large(weights=None)
-        # แก้ output layer ให้ตรงกับ 7 class
-        model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
+        # โหลด checkpoint โดยตรง
+        checkpoint = torch.load(ckpt_path, map_location=device)
         
-        # โหลด state_dict
-        state_dict = torch.load(model_path, map_location=device)
-        model.load_state_dict(state_dict)
+        # ตรวจสอบว่าเป็น state_dict ของ Lightning หรือเต็ม model
+        if 'state_dict' in checkpoint:
+            # สร้างโครงสร้าง MobileNetV3
+            model = models.mobilenet_v3_large(weights=None)
+            # ปรับ classifier ให้ตรงกับ 7 class
+            model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
+            # โหลด state_dict จาก Lightning checkpoint
+            state_dict = {}
+            for k, v in checkpoint['state_dict'].items():
+                # Lightning มักบวก prefix 'model.' แก้ไข prefix
+                if k.startswith('model.'):
+                    k = k.replace('model.', '')
+                state_dict[k] = v
+            model.load_state_dict(state_dict)
+        else:
+            # โหลด model เต็ม (trust source)
+            model = checkpoint
+        
         model.to(device)
         model.eval()
         return model
@@ -42,7 +55,6 @@ def load_model(model_path):
 
 # --- Prediction Function ---
 def pred_class(model, image, class_names):
-    # Preprocessing image
     preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -51,7 +63,6 @@ def pred_class(model, image, class_names):
     ])
     input_tensor = preprocess(image).unsqueeze(0).to(device)
     
-    # Forward pass
     with torch.no_grad():
         outputs = model(input_tensor)
         probabilities = torch.softmax(outputs, dim=1).cpu().numpy()[0]
@@ -62,7 +73,7 @@ st.title('👁️ Eye Diseases Classification')
 st.header('Please upload an image of an eye')
 
 # Load model
-model = load_model(mobilenetv3_path)
+model = load_model(mobilenetv3_ckpt_path)
 
 # Image uploader
 uploaded_image = st.file_uploader('Choose an image...', type=['jpg', 'jpeg', 'png'])
