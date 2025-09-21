@@ -23,7 +23,7 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_path = r"C:\mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+mobilenetv3_path = r"C:mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Model Loading ---
 @st.cache_resource
@@ -86,4 +86,5 @@ if uploaded_image is not None:
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
+
 
