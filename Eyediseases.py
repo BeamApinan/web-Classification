@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import os
 import pytorch_lightning as pl
-
+pip install pytorch-lightning
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Eye Diseases Classification",
@@ -107,3 +107,4 @@ if uploaded_image is not None:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
+
