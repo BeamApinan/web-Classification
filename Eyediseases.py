@@ -105,3 +105,4 @@ if uploaded_image is not None:
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
 
+
