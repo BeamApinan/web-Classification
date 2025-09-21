@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_path = r"C:\Users\USER\OneDrive\microplastic-website\web-Classification\mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+mobilenetv3_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Device ---
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
