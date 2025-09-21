@@ -6,7 +6,7 @@ import os
 
 # --- Import model class ---
 try:
-    from mobilenet_module import MobileNetV3Lightning  # class โมเดลของคุณ
+    from mobilenet_module import MobileNetV3Lightning  # นำ class โมเดลของคุณเข้ามา
 except ImportError:
     st.error("ไม่พบ class โมเดล MobileNetV3Lightning")
     st.stop()
@@ -31,7 +31,8 @@ st.set_page_config(
 )
 
 # --- Fixed Model Path ---
-model_path = "mobilenetv3.pt"  # เก็บไฟล์ state_dict ของโมเดลไว้ในโฟลเดอร์เดียวกับ app.py
+# แนะนำ: rename ไฟล์เพื่อไม่ให้มีเว้นวรรคหรือวงเล็บบน Cloud
+model_path = "mobilenetv3_large_100_checkpoint_fold0.pt"
 
 # --- Model Loading ---
 @st.cache_resource
@@ -43,7 +44,7 @@ def load_model(model_path):
         st.stop()
     
     try:
-        # สร้าง model structure ก่อน
+        # สร้าง model structure
         model = MobileNetV3Lightning()
         # โหลด state_dict
         state_dict = torch.load(model_path, map_location=device)
@@ -73,6 +74,7 @@ if uploaded_image is not None:
         # Prediction button
         if st.button('Predict'):
             with st.spinner('Analyzing the image...'):
+                # ปรับ class names ตามโมเดลที่ train
                 class_names = [
                     'Cataract', 
                     'Diabetic Retinopathy', 
@@ -83,6 +85,7 @@ if uploaded_image is not None:
                     'Normal'
                 ]
                 
+                # เรียกฟังก์ชันทำนาย
                 probabilities = pred_class(model, image, class_names)
             
             # Display results
