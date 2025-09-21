@@ -12,10 +12,11 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_ckpt_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+# สำหรับ GitHub ควรใช้ path relative เช่น เก็บโมเดลในโฟลเดอร์ 'models'
+mobilenetv3_ckpt_path = "models/mobilenetv3_large_100_checkpoint_fold0.pt"
 
 # --- Device ---
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # --- Load Model State Dict ---
 @st.cache_resource
@@ -24,15 +25,15 @@ def load_model_state_dict(ckpt_path):
         st.error(f"ไม่พบไฟล์โมเดล: '{ckpt_path}'")
         st.stop()
     try:
-        # โหลด checkpoint (state_dict) เฉพาะ weights
+        # โหลด state_dict ของโมเดลอย่างปลอดภัย
         checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
         
-        # สร้าง MobileNetV3 โครงสร้างปกติ
+        # สร้าง MobileNetV3 architecture
         model = models.mobilenet_v3_large(weights=None)
-        # ปรับ classifier ให้ตรงกับ 7 class
+        # ปรับ classifier ให้ตรงกับ 7 classes
         model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
         
-        # ตรวจสอบว่ามี prefix จาก Lightning ('model.') ให้แก้
+        # แก้ prefix ของ Lightning checkpoint ถ้ามี
         state_dict = {}
         for k, v in checkpoint.items():
             if k.startswith('model.'):
@@ -104,5 +105,3 @@ if uploaded_image is not None:
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
-
-
