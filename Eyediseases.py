@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # --- Fixed Model Path (Only MobileNetV3) ---
-model_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+model_path = "https://github.com/BeamApinan/web-Classification/blob/2417d1d859089091b0085463e86a490a11fcde31/mobilenetv3_large_100_checkpoint_fold0%20(2).pt"
 
 # --- Model Loading ---
 @st.cache_resource
@@ -87,4 +87,5 @@ if uploaded_image is not None:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ (An error occurred during image processing): {e}")
+
 
