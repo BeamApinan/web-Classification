@@ -1,0 +1,7 @@
+git lfs install
+git lfs track "models/mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+git add .gitattributes
+git add models/mobilenetv3_large_100_checkpoint_fold0\ \(2\).pt
+git commit -m "Add MobileNetV3 checkpoint via Git LFS"
+git push origin main
+mobilenetv3_ckpt_path = "models/mobilenetv3_large_100_checkpoint_fold0 (2).pt"
