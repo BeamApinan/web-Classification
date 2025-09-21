@@ -4,7 +4,6 @@ from torchvision import models, transforms
 from PIL import Image
 import numpy as np
 import os
-import pytorch_lightning as pl
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -12,30 +11,29 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- Model Path ---
-mobilenetv3_ckpt_path = "C:\Users\USER\OneDrive\microplastic-website\web-Classification\mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+# --- Model Path (Relative path ใน repo GitHub) ---
+mobilenetv3_ckpt_path = "models/mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Device ---
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# --- Load Model ---
+# --- Load Model Function ---
 @st.cache_resource
 def load_model(ckpt_path):
     if not os.path.exists(ckpt_path):
         st.error(f"ไม่พบไฟล์โมเดล: '{ckpt_path}'")
         st.stop()
     try:
-        # โหลด checkpoint full object (ต้อง trusted source)
+        # โหลด full checkpoint (trusted source)
         checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
         
-        # ถ้า checkpoint เป็น LightningModule หรือ state_dict
+        # ถ้า checkpoint เป็น Lightning dict
         if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
             state_dict = checkpoint['state_dict']
-            # สร้าง MobileNetV3 architecture
             model = models.mobilenet_v3_large(weights=None)
             model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
             
-            # แก้ prefix ของ Lightning checkpoint ถ้ามี
+            # แก้ prefix 'model.' ของ Lightning checkpoint
             new_state_dict = {}
             for k, v in state_dict.items():
                 if k.startswith('model.'):
@@ -45,7 +43,7 @@ def load_model(ckpt_path):
         else:
             # full model object
             model = checkpoint
-
+        
         model.to(device)
         model.eval()
         return model
@@ -72,8 +70,10 @@ def pred_class(model, image, class_names):
 st.title('👁️ Eye Diseases Classification')
 st.header('Please upload an image of an eye')
 
+# โหลดโมเดล
 model = load_model(mobilenetv3_ckpt_path)
 
+# อัปโหลดรูป
 uploaded_image = st.file_uploader('Choose an image...', type=['jpg', 'jpeg', 'png'])
 
 if uploaded_image is not None:
@@ -107,6 +107,3 @@ if uploaded_image is not None:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
-
-
-
