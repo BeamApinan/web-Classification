@@ -1,20 +1,9 @@
 import streamlit as st
 import torch
+from torchvision import models, transforms
 from PIL import Image
 import numpy as np
 import os
-
-# --- Dependency Check and Import ---
-try:
-    from prediction import pred_class
-except ImportError:
-    st.warning("`prediction.py` not found. Using a placeholder prediction function.")
-    def pred_class(model, image, class_names):
-        import time
-        time.sleep(2)
-        random_probs = np.random.rand(len(class_names))
-        random_probs /= np.sum(random_probs)
-        return random_probs
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -23,19 +12,27 @@ st.set_page_config(
 )
 
 # --- Model Path ---
-mobilenetv3_path = r"mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+mobilenetv3_path = r"C:\Users\USER\OneDrive\microplastic-website\web-Classification\mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
-# --- Model Loading ---
+# --- Device ---
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+# --- Load MobileNetV3 state_dict ---
 @st.cache_resource
 def load_model(model_path):
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    
     if not os.path.exists(model_path):
         st.error(f"ไม่พบไฟล์โมเดล: '{model_path}'")
         st.stop()
-        
+
     try:
-        model = torch.load(model_path, map_location=device, weights_only=False)
+        # สร้างโครงสร้าง MobileNetV3
+        model = models.mobilenet_v3_large(weights=None)
+        # แก้ output layer ให้ตรงกับ 7 class
+        model.classifier[3] = torch.nn.Linear(model.classifier[3].in_features, 7)
+        
+        # โหลด state_dict
+        state_dict = torch.load(model_path, map_location=device)
+        model.load_state_dict(state_dict)
         model.to(device)
         model.eval()
         return model
@@ -43,11 +40,28 @@ def load_model(model_path):
         st.error(f"เกิดข้อผิดพลาดในการโหลดโมเดล: {e}")
         st.stop()
 
+# --- Prediction Function ---
+def pred_class(model, image, class_names):
+    # Preprocessing image
+    preprocess = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+    input_tensor = preprocess(image).unsqueeze(0).to(device)
+    
+    # Forward pass
+    with torch.no_grad():
+        outputs = model(input_tensor)
+        probabilities = torch.softmax(outputs, dim=1).cpu().numpy()[0]
+    return probabilities
+
 # --- Main Application UI ---
 st.title('👁️ Eye Diseases Classification')
 st.header('Please upload an image of an eye')
 
-# Load MobileNetV3
+# Load model
 model = load_model(mobilenetv3_path)
 
 # Image uploader
@@ -69,7 +83,6 @@ if uploaded_image is not None:
                     'Myopia',
                     'Normal'
                 ]
-                
                 probabilities = pred_class(model, image, class_names)
             
             st.success("Prediction Complete!")
@@ -86,6 +99,3 @@ if uploaded_image is not None:
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
-
-
-
