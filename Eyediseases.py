@@ -4,13 +4,21 @@ from PIL import Image
 import numpy as np
 import os
 
-# --- Dependency Check and Import ---
+# --- Lightning Import ---
+try:
+    import pytorch_lightning as pl
+    from mobilenet_module import MobileNetV3Lightning  # นำ class โมเดลของคุณเข้ามา
+except ImportError:
+    st.error("PyTorch Lightning ไม่ได้ติดตั้งหรือไม่พบ class โมเดล")
+    st.stop()
+
+# --- Dependency Check and Import for prediction ---
 try:
     from prediction import pred_class
 except ImportError:
-    st.warning("`prediction.py` not found. Using a placeholder prediction function. Please ensure the file exists and is correct.")
+    st.warning("`prediction.py` not found. Using a placeholder prediction function.")
     def pred_class(model, image, class_names):
-        st.info("Displaying random prediction results as `prediction.py` is missing.")
+        st.info("Displaying random prediction results as placeholder.")
         import time
         time.sleep(2)
         random_probs = np.random.rand(len(class_names))
@@ -23,25 +31,21 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- Fixed Model Path (Only MobileNetV3) ---
-model_path = "mobilenetv3_large_100_checkpoint_fold0 (2).pt"
+# --- Fixed Model Path ---
+model_path = "mobilenetv3.pt"  # เก็บไฟล์โมเดลไว้ในโฟลเดอร์เดียวกับ app.py
 
 # --- Model Loading ---
 @st.cache_resource
 def load_model(model_path):
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    
     if not os.path.exists(model_path):
-        st.error(f"ไม่พบไฟล์โมเดล (Model file not found): '{model_path}'")
+        st.error(f"ไม่พบไฟล์โมเดล: '{model_path}'")
         st.stop()
-        
     try:
-        model = torch.load(model_path, map_location=device, weights_only=False)
-        model.to(device)
+        model = MobileNetV3Lightning.load_from_checkpoint(model_path)
         model.eval()
         return model
     except Exception as e:
-        st.error(f"เกิดข้อผิดพลาดในการโหลดโมเดล (Error loading model): {e}")
+        st.error(f"เกิดข้อผิดพลาดในการโหลดโมเดล: {e}")
         st.stop()
 
 # --- Main Application UI ---
@@ -59,6 +63,7 @@ if uploaded_image is not None:
         image = Image.open(uploaded_image).convert('RGB')
         st.image(image, caption='Uploaded Image', use_container_width=True)
         
+        # Prediction button
         if st.button('Predict'):
             with st.spinner('Analyzing the image...'):
                 class_names = [
@@ -70,8 +75,10 @@ if uploaded_image is not None:
                     'Myopia',
                     'Normal'
                 ]
+                
                 probabilities = pred_class(model, image, class_names)
             
+            # Display results
             st.success("Prediction Complete!")
             st.write("## Prediction Result")
             
@@ -86,7 +93,4 @@ if uploaded_image is not None:
                 else:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
-        st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ (An error occurred during image processing): {e}")
-
-
-
+        st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
