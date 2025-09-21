@@ -13,7 +13,7 @@ st.set_page_config(
 
 # --- Model Path ---
 # สำหรับ GitHub ควรใช้ path relative เช่น เก็บโมเดลในโฟลเดอร์ 'models'
-mobilenetv3_ckpt_path = "models/mobilenetv3_large_100_checkpoint_fold0.pt"
+mobilenetv3_ckpt_path = "mobilenetv3_large_100_checkpoint_fold0.pt"
 
 # --- Device ---
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -105,3 +105,4 @@ if uploaded_image is not None:
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
+
