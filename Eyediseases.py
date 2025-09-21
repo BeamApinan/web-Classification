@@ -32,7 +32,7 @@ st.set_page_config(
 
 # --- Fixed Model Path ---
 # แนะนำ: rename ไฟล์เพื่อไม่ให้มีเว้นวรรคหรือวงเล็บบน Cloud
-model_path = "mobilenetv3_large_100_checkpoint_fold0.pt"
+model_path = "mobilenetv3_large_100_checkpoint_fold0 (2).pt"
 
 # --- Model Loading ---
 @st.cache_resource
@@ -104,3 +104,4 @@ if uploaded_image is not None:
                     st.write(f"{class_name}: {prob:.2f}%")
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการประมวลผลภาพ: {e}")
+
