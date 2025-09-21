@@ -4,12 +4,11 @@ from PIL import Image
 import numpy as np
 import os
 
-# --- Lightning Import ---
+# --- Import model class ---
 try:
-    import pytorch_lightning as pl
-    from mobilenet_module import MobileNetV3Lightning  # นำ class โมเดลของคุณเข้ามา
+    from mobilenet_module import MobileNetV3Lightning  # class โมเดลของคุณ
 except ImportError:
-    st.error("PyTorch Lightning ไม่ได้ติดตั้งหรือไม่พบ class โมเดล")
+    st.error("ไม่พบ class โมเดล MobileNetV3Lightning")
     st.stop()
 
 # --- Dependency Check and Import for prediction ---
@@ -32,16 +31,24 @@ st.set_page_config(
 )
 
 # --- Fixed Model Path ---
-model_path = "mobilenetv3.pt"  # เก็บไฟล์โมเดลไว้ในโฟลเดอร์เดียวกับ app.py
+model_path = "mobilenetv3.pt"  # เก็บไฟล์ state_dict ของโมเดลไว้ในโฟลเดอร์เดียวกับ app.py
 
 # --- Model Loading ---
 @st.cache_resource
 def load_model(model_path):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     if not os.path.exists(model_path):
         st.error(f"ไม่พบไฟล์โมเดล: '{model_path}'")
         st.stop()
+    
     try:
-        model = MobileNetV3Lightning.load_from_checkpoint(model_path)
+        # สร้าง model structure ก่อน
+        model = MobileNetV3Lightning()
+        # โหลด state_dict
+        state_dict = torch.load(model_path, map_location=device)
+        model.load_state_dict(state_dict)
+        model.to(device)
         model.eval()
         return model
     except Exception as e:
